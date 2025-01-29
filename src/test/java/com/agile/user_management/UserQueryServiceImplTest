@@ -1,0 +1,137 @@
+package com.agile.user_management;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import com.agile.user_management.dto.UserDTO;
+import com.agile.user_management.entity.User;
+import com.agile.user_management.exception.ResourceNotFoundException;
+import com.agile.user_management.mapper.UserMapper;
+import com.agile.user_management.repository.UserRepository;
+import com.agile.user_management.service.impl.UserQueryServiceImpl;
+
+class UserQueryServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @InjectMocks
+    private UserQueryServiceImpl userQueryService;
+
+    private UserDTO userDTO;
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Initialize common test data for UserDTO
+        userDTO = new UserDTO();
+        userDTO.setUsername("john_doe");
+        userDTO.setName("John Doe");
+        userDTO.setEmail("john@example.com");
+        userDTO.setGender("Male");
+        userDTO.setPictureUrl("http://example.com/john.jpg");
+
+        // Initialize User object using setters instead of a parameterized constructor
+        user = new User();
+        user.setUsername("john_doe");
+        user.setName("John Doe");
+        user.setEmail("john@example.com");
+        user.setGender("Male");
+        user.setPictureUrl("http://example.com/john.jpg");
+    }
+
+    @Test
+    void testGetAllUsers() {
+        List<User> users = Arrays.asList(user);
+        Page<User> userPage = new PageImpl<>(users, PageRequest.of(0, 1), 1);
+
+        when(userRepository.findAll(PageRequest.of(0, 1))).thenReturn(userPage);
+        when(userMapper.toDTO(user)).thenReturn(userDTO);
+
+        Page<UserDTO> result = userQueryService.getAllUsers(PageRequest.of(0, 1));
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("john_doe", result.getContent().get(0).getUsername());
+        verify(userRepository, times(1)).findAll(PageRequest.of(0, 1));
+    }
+
+    @Test
+    void testGetUser() {
+        when(userRepository.findById("john_doe")).thenReturn(Optional.of(user));
+        when(userMapper.toDTO(user)).thenReturn(userDTO);
+
+        UserDTO result = userQueryService.getUser("john_doe");
+
+        assertNotNull(result);
+        assertEquals("john_doe", result.getUsername());
+        assertEquals("John Doe", result.getName());
+        verify(userRepository, times(1)).findById("john_doe");
+    }
+
+    @Test
+    void testGetUserNotFound() {
+        when(userRepository.findById("john_doe")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userQueryService.getUser("john_doe"));
+    }
+
+    @Test
+    void testGetUserTree() {
+        // Setup mock data for user tree without parameterized constructor
+        User user1 = new User();
+        user1.setUsername("user1");
+        user1.setName("User One");
+        user1.setEmail("user1@example.com");
+        user1.setGender("Male");
+        user1.setPictureUrl("http://example.com/user1.jpg");
+        user1.setCountry("USA");
+        user1.setState("California");
+        user1.setCity("Los Angeles");
+
+        User user2 = new User();
+        user2.setUsername("user2");
+        user2.setName("User Two");
+        user2.setEmail("user2@example.com");
+        user2.setGender("Female");
+        user2.setPictureUrl("http://example.com/user2.jpg");
+        user2.setCountry("USA");
+        user2.setState("California");
+        user2.setCity("San Francisco");
+
+        List<User> users = Arrays.asList(user1, user2);
+        when(userRepository.findAll()).thenReturn(users);
+
+        Map<String, Map<String, Map<String, Long>>> userTree = userQueryService.getUserTree();
+
+        assertNotNull(userTree);
+        assertTrue(userTree.containsKey("USA"));
+        assertTrue(userTree.get("USA").containsKey("California"));
+        assertTrue(userTree.get("USA").get("California").containsKey("Los Angeles"));
+        assertTrue(userTree.get("USA").get("California").containsKey("San Francisco"));
+    }
+}

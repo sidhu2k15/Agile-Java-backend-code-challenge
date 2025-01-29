@@ -59,7 +59,8 @@ git checkout master
 
 ### **3️⃣ Access the API**
 After starting the server, open:  
-✅ **Swagger UI**: [`http://localhost:8080/swagger-ui/`](http://localhost:8080/swagger-ui/)  
+✅ **Swagger UI**: [`http://localhost:8080/swagger`]
+✅ **API JSON**: [`http://localhost:8080/api-docs`]   
 ✅ **H2 Console**: [`http://localhost:8080/h2-console`](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:testdb`)
 
 ---

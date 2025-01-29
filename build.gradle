@@ -36,8 +36,18 @@ dependencies {
     //Java Architecture for XML Binding
      implementation 'javax.xml.bind:jaxb-api:2.3.1'
 
-    // JUnit for Testing
+    // Spring Boot Starter Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    
+    // Mockito for Mocking
+    testImplementation 'org.mockito:mockito-core'
+
+    // MockMvc for API testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'  
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.1'  
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.7.1'  
 }
 
 
